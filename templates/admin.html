@@ -5,6 +5,29 @@
 {% block content %}
 <h1 class="mb-4">Admin Panel</h1>
 
+<h2 class="mb-3">Currently Logged-in Users</h2>
+<table class="table table-striped mb-5">
+    <thead>
+        <tr>
+            <th>ID</th>
+            <th>Name</th>
+            <th>Email</th>
+            <th>Role</th>
+        </tr>
+    </thead>
+    <tbody>
+        {% for user in logged_in_users %}
+        <tr>
+            <td>{{ user.id }}</td>
+            <td>{{ user.name }}</td>
+            <td>{{ user.email }}</td>
+            <td>{{ user.role }}</td>
+        </tr>
+        {% endfor %}
+    </tbody>
+</table>
+
+<h2 class="mb-3">All Users</h2>
 <table class="table table-striped">
     <thead>
         <tr>
@@ -16,7 +39,7 @@
         </tr>
     </thead>
     <tbody>
-        {% for user in users %}
+        {% for user in all_users %}
         <tr>
             <td>{{ user.id }}</td>
             <td>{{ user.name }}</td>
@@ -37,4 +60,8 @@
         {% endfor %}
     </tbody>
 </table>
+
+<form action="{{ url_for('cleanup_sessions') }}" method="POST" class="mt-4">
+    <button type="submit" class="btn btn-warning">Cleanup Inactive Sessions</button>
+</form>
 {% endblock %}

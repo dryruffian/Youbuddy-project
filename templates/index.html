@@ -1,2 +1,9 @@
 {% extends "base.html" %}
-{% block Title %}Home |{% endblock Title %}
+{% block content %}
+    <h1>Welcome to Video Management App</h1>
+    {% if current_user.is_authenticated %}
+        <p>Hello, {{ current_user.name }}!</p>
+    {% else %}
+        <p>Please log in to access the app features.</p>
+    {% endif %}
+{% endblock %}

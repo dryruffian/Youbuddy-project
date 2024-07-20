@@ -1,6 +1,4 @@
-# app.py
-
-from flask import Flask, render_template, redirect, url_for, request, flash
+from flask import Flask, render_template, redirect, url_for, request, flash, session
 from flask_sqlalchemy import SQLAlchemy
 from flask_login import LoginManager, UserMixin, login_user, login_required, logout_user, current_user
 from werkzeug.security import generate_password_hash, check_password_hash
@@ -8,15 +6,17 @@ from functools import wraps
 from authlib.integrations.flask_client import OAuth
 import os
 from dotenv import load_dotenv
+from datetime import datetime
 
-load_dotenv() 
+load_dotenv()
 
 app = Flask(__name__)
+
 app.config['SECRET_KEY'] = os.getenv('SECRET_KEY')
 app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///users.db'
 app.config['GOOGLE_CLIENT_ID'] = os.getenv('GOOGLE_CLIENT_ID')
 app.config['GOOGLE_CLIENT_SECRET'] = os.getenv('GOOGLE_CLIENT_SECRET')
-
+logged_in_users = {}
 db = SQLAlchemy(app)
 login_manager = LoginManager(app)
 login_manager.login_view = 'login'
@@ -74,6 +74,7 @@ def authorize():
             db.session.add(user)
             db.session.commit()
         login_user(user)
+        logged_in_users[user.id] = datetime.now()  # Add user to logged_in_users
         return redirect(url_for('index'))
     except Exception as e:
         flash(f'An error occurred: {str(e)}')
@@ -82,7 +83,9 @@ def authorize():
 @app.route('/logout')
 @login_required
 def logout():
+    user_id = current_user.id
     logout_user()
+    logged_in_users.pop(user_id, None)  # Remove user from logged_in_users
     return redirect(url_for('index'))
 
 @app.route('/update_role', methods=['POST'])
@@ -103,7 +106,7 @@ def update_role():
 
 @app.route('/upload')
 @login_required
-@role_required('Editor')
+@role_required('Creator')
 def upload():
     return render_template('upload.html')
 
@@ -113,9 +116,24 @@ def upload():
 def publish():
     return render_template('publish.html')
 
+
+@app.route('/cleanup_sessions')
+@login_required
+@role_required('Creator')
+def cleanup_sessions():
+    current_time = datetime.now()
+    inactive_threshold = timedelta(hours=1)  # Adjust as needed
+    inactive_users = [user_id for user_id, login_time in logged_in_users.items() 
+                      if current_time - login_time > inactive_threshold]
+    for user_id in inactive_users:
+        logged_in_users.pop(user_id, None)
+    flash(f'Removed {len(inactive_users)} inactive sessions', 'info')
+    return redirect(url_for('admin'))
+
+
 @app.route('/admin')
 @login_required
-@role_required('Editor')
+@role_required('Creator')
 def admin():
     return render_template('admin.html')
 
