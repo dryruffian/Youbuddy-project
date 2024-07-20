@@ -36,11 +36,11 @@
                             </li>
                         {% endif %}
                         <li class="nav-item">
-                            <a class="nav-link" href="{{ url_for('logout') }}">Logout</a>
+                            <button type="button" class="btn btn-primary"><a class="nav-link --bs-light-text-emphasis" href="{{ url_for('logout') }}">Logout</a></button>
                         </li>
                     {% else %}
                         <li class="nav-item">
-                            <a class="nav-link" href="{{ url_for('login') }}">Login</a>
+                            <button type="button" class="btn btn-primary"><a class="nav-link" href="{{ url_for('login') }}">Login</a></button>
                         </li>
                     {% endif %}
                 </ul>

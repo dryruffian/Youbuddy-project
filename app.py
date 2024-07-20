@@ -2,20 +2,25 @@ from flask import Flask, render_template, redirect, url_for, request, flash, ses
 from flask_sqlalchemy import SQLAlchemy
 from flask_login import LoginManager, UserMixin, login_user, login_required, logout_user, current_user
 from werkzeug.security import generate_password_hash, check_password_hash
+from werkzeug.utils import secure_filename
 from functools import wraps
 from authlib.integrations.flask_client import OAuth
 import os
 from dotenv import load_dotenv
-from datetime import datetime
+from datetime import datetime,timedelta
+
 
 load_dotenv()
-
+UPLOAD_FOLDER = 'static/uploads'
+ALLOWED_EXTENSIONS = {'mp4', 'avi', 'mov', 'wmv'}
+os.makedirs(UPLOAD_FOLDER, exist_ok=True)
 app = Flask(__name__)
 
 app.config['SECRET_KEY'] = os.getenv('SECRET_KEY')
 app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///users.db'
 app.config['GOOGLE_CLIENT_ID'] = os.getenv('GOOGLE_CLIENT_ID')
 app.config['GOOGLE_CLIENT_SECRET'] = os.getenv('GOOGLE_CLIENT_SECRET')
+app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER
 logged_in_users = {}
 db = SQLAlchemy(app)
 login_manager = LoginManager(app)
@@ -37,6 +42,18 @@ class User(UserMixin, db.Model):
     name = db.Column(db.String(1000))
     role = db.Column(db.String(20))
 
+class Video(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    filename = db.Column(db.String(100), nullable=False)
+    upload_date = db.Column(db.DateTime, nullable=False, default=datetime.utcnow)
+    user_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)
+    user = db.relationship('User', backref=db.backref('videos', lazy=True))
+
+
+def allowed_file(filename):
+    return '.' in filename and filename.rsplit('.', 1)[1].lower() in ALLOWED_EXTENSIONS
+
+
 @login_manager.user_loader
 def load_user(user_id):
     return User.query.get(int(user_id))
@@ -54,7 +71,11 @@ def role_required(role):
 
 @app.route('/')
 def index():
-    return render_template('index.html')
+    if current_user.is_authenticated:
+        videos = Video.query.order_by(Video.upload_date.desc()).all()
+    else:
+        videos = []
+    return render_template('index.html', videos=videos)
 
 @app.route('/login')
 def login():
@@ -74,7 +95,7 @@ def authorize():
             db.session.add(user)
             db.session.commit()
         login_user(user)
-        logged_in_users[user.id] = datetime.now()  # Add user to logged_in_users
+        logged_in_users[user.id] = datetime.now()  
         return redirect(url_for('index'))
     except Exception as e:
         flash(f'An error occurred: {str(e)}')
@@ -85,13 +106,12 @@ def authorize():
 def logout():
     user_id = current_user.id
     logout_user()
-    logged_in_users.pop(user_id, None)  # Remove user from logged_in_users
+    logged_in_users.pop(user_id, None)  
     return redirect(url_for('index'))
 
 @app.route('/update_role', methods=['POST'])
 @login_required
-
-@role_required('Editor')
+@role_required('Creator')
 def update_role():
     user_id = request.form.get('user_id')
     new_role = request.form.get('new_role')
@@ -104,10 +124,31 @@ def update_role():
         flash('User not found', 'error')
     return redirect(url_for('admin'))
 
-@app.route('/upload')
+@app.route('/upload', methods=['GET', 'POST'])
 @login_required
 @role_required('Creator')
 def upload():
+    if request.method == 'POST':
+        if 'video' not in request.files:
+            flash('No file part', 'error')
+            return redirect(request.url)
+        file = request.files['video']
+        if file.filename == '':
+            flash('No selected file', 'error')
+            return redirect(request.url)
+        if file and allowed_file(file.filename):
+            filename = secure_filename(file.filename)
+            file_path = os.path.join(app.config['UPLOAD_FOLDER'], filename)
+            file.save(file_path)
+            
+            new_video = Video(filename=filename, user_id=current_user.id)
+            db.session.add(new_video)
+            db.session.commit()
+            
+            flash('Video uploaded successfully', 'success')
+            return redirect(url_for('index'))
+        else:
+            flash('Invalid file type. Allowed types are: mp4, avi, mov, wmv', 'error')
     return render_template('upload.html')
 
 @app.route('/publish')
@@ -135,7 +176,9 @@ def cleanup_sessions():
 @login_required
 @role_required('Creator')
 def admin():
-    return render_template('admin.html')
+    all_users = User.query.all()
+    # logged_in_users = [user for user in all_users if user.id in logged_in_users]
+    return render_template('admin.html', all_users=all_users)
 
 def init_db():
     with app.app_context():

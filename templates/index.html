@@ -1,8 +1,30 @@
 {% extends "base.html" %}
 {% block content %}
-    <h1>Welcome to Video Management App</h1>
+    <h1 class="mb-4">Welcome to Video Management App</h1>
     {% if current_user.is_authenticated %}
         <p>Hello, {{ current_user.name }}!</p>
+        
+        {% if videos %}
+            <div class="row row-cols-1 row-cols-md-3 g-4">
+                {% for video in videos %}
+                    <div class="col">
+                        <div class="card h-100">
+                            <video class="card-img-top" controls>
+                                <source src="{{ url_for('static', filename='uploads/' + video.filename) }}" type="video/mp4">
+                                Your browser does not support the video tag.
+                            </video>
+                            <div class="card-body">
+                                <h5 class="card-title">{{ video.filename }}</h5>
+                                <p class="card-text">Uploaded by: {{ video.user.name }}</p>
+                                <p class="card-text"><small class="text-muted">Uploaded on: {{ video.upload_date.strftime('%Y-%m-%d %H:%M:%S') }}</small></p>
+                            </div>
+                        </div>
+                    </div>
+                {% endfor %}
+            </div>
+        {% else %}
+            <p>No videos uploaded yet.</p>
+        {% endif %}
     {% else %}
         <p>Please log in to access the app features.</p>
     {% endif %}
