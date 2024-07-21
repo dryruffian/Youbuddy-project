@@ -1,4 +1,4 @@
-from flask import Flask, render_template, redirect, url_for, request, flash, session
+from flask import Flask, render_template, redirect, url_for, request, flash, session, jsonify
 from flask_sqlalchemy import SQLAlchemy
 from flask_login import LoginManager, UserMixin, login_user, login_required, logout_user, current_user
 from werkzeug.security import generate_password_hash, check_password_hash
@@ -48,6 +48,12 @@ class Video(db.Model):
     upload_date = db.Column(db.DateTime, nullable=False, default=datetime.utcnow)
     user_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)
     user = db.relationship('User', backref=db.backref('videos', lazy=True))
+
+    def rename(self, new_filename):
+        old_path = os.path.join(app.config['UPLOAD_FOLDER'], self.filename)
+        new_path = os.path.join(app.config['UPLOAD_FOLDER'], new_filename)
+        os.rename(old_path, new_path)
+        self.filename = new_filename
 
 
 def allowed_file(filename):
@@ -151,6 +157,32 @@ def upload():
             flash('Invalid file type. Allowed types are: mp4, avi, mov, wmv', 'error')
     return render_template('upload.html')
 
+@app.route('/rename_video', methods=['POST'])
+@login_required
+def rename_video():
+    data = request.json
+    video_id = data.get('video_id')
+    new_filename = data.get('new_filename')
+
+    if not video_id or not new_filename:
+        return jsonify({'success': False, 'message': 'Missing video_id or new_filename'}), 400
+
+    video = Video.query.get(video_id)
+    if not video:
+        return jsonify({'success': False, 'message': 'Video not found'}), 404
+
+    if video.user_id != current_user.id and current_user.role != 'Creator':
+        return jsonify({'success': False, 'message': 'Permission denied'}), 403
+
+    try:
+        video.rename(new_filename)
+        db.session.commit()
+        return jsonify({'success': True, 'message': 'Video renamed successfully'})
+    except Exception as e:
+        db.session.rollback()
+        return jsonify({'success': False, 'message': str(e)}), 500
+    
+    
 @app.route('/publish')
 @login_required
 @role_required('Manager')

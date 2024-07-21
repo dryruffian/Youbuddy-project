@@ -17,6 +17,33 @@
                                 <h5 class="card-title">{{ video.filename }}</h5>
                                 <p class="card-text">Uploaded by: {{ video.user.name }}</p>
                                 <p class="card-text"><small class="text-muted">Uploaded on: {{ video.upload_date.strftime('%Y-%m-%d %H:%M:%S') }}</small></p>
+                                <button type="button" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#renameModal{{ video.id }}">
+                                    Rename
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Rename Modal -->
+                    <div class="modal fade" id="renameModal{{ video.id }}" tabindex="-1" aria-labelledby="renameModalLabel{{ video.id }}" aria-hidden="true">
+                        <div class="modal-dialog">
+                            <div class="modal-content">
+                                <div class="modal-header">
+                                    <h5 class="modal-title" id="renameModalLabel{{ video.id }}">Rename Video</h5>
+                                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                                </div>
+                                <div class="modal-body">
+                                    <form id="renameForm{{ video.id }}">
+                                        <div class="mb-3">
+                                            <label for="newFilename{{ video.id }}" class="form-label">New Filename</label>
+                                            <input type="text" class="form-control" id="newFilename{{ video.id }}" value="{{ video.filename }}">
+                                        </div>
+                                    </form>
+                                </div>
+                                <div class="modal-footer">
+                                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                                    <button type="button" class="btn btn-primary" onclick="renameVideo({{ video.id }})">Save changes</button>
+                                </div>
                             </div>
                         </div>
                     </div>
@@ -28,4 +55,35 @@
     {% else %}
         <p>Please log in to access the app features.</p>
     {% endif %}
+{% endblock %}
+
+{% block scripts %}
+<script>
+function renameVideo(videoId) {
+    const newFilename = document.getElementById(`newFilename${videoId}`).value;
+    fetch('/rename_video', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+            video_id: videoId,
+            new_filename: newFilename
+        }),
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            alert('Video renamed successfully');
+            location.reload();
+        } else {
+            alert('Failed to rename video: ' + data.message);
+        }
+    })
+    .catch((error) => {
+        console.error('Error:', error);
+        alert('An error occurred while renaming the video');
+    });
+}
+</script>
 {% endblock %}
