@@ -1,6 +1,7 @@
 from flask import Flask, render_template, redirect, url_for, request, flash, session, jsonify
 from flask_sqlalchemy import SQLAlchemy
 from flask_login import LoginManager, UserMixin, login_user, login_required, logout_user, current_user
+from flask_jwt_extended import JWTManager, create_access_token, jwt_required, get_jwt_identity
 from werkzeug.security import generate_password_hash, check_password_hash
 from werkzeug.utils import secure_filename
 from functools import wraps
@@ -55,6 +56,54 @@ class Video(db.Model):
         os.rename(old_path, new_path)
         self.filename = new_filename
 
+@login_manager.user_loader
+def load_user(user_id):
+    return User.query.get(int(user_id))
+
+@app.route('/login', methods=['GET', 'POST'])
+def login():
+    if request.method == 'POST':
+        email = request.form.get('email')
+        password = request.form.get('password')
+        user = User.query.filter_by(email=email).first()
+        if user and check_password_hash(user.password, password):
+            login_user(user)
+            access_token = create_access_token(identity=user.id)
+            return jsonify(access_token=access_token), 200
+        else:
+            flash('Please check your login details and try again.')
+            return redirect(url_for('login'))
+    return render_template('login.html')
+
+@app.route('/signup', methods=['GET', 'POST'])
+def signup():
+    if request.method == 'POST':
+        email = request.form.get('email')
+        name = request.form.get('name')
+        password = request.form.get('password')
+        user = User.query.filter_by(email=email).first()
+        if user:
+            flash('Email address already exists')
+            return redirect(url_for('signup'))
+        new_user = User(email=email, name=name, password=generate_password_hash(password, method='sha256'), role='Editor')
+        db.session.add(new_user)
+        db.session.commit()
+        return redirect(url_for('login'))
+    return render_template('signup.html')
+
+@app.route('/logout')
+@login_required
+def logout():
+    logout_user()
+    return redirect(url_for('index'))
+
+@app.route('/protected')
+@jwt_required()
+def protected():
+    current_user_id = get_jwt_identity()
+    user = User.query.get(current_user_id)
+    return jsonify(logged_in_as=user.email), 200
+
 
 def allowed_file(filename):
     return '.' in filename and filename.rsplit('.', 1)[1].lower() in ALLOWED_EXTENSIONS
@@ -83,10 +132,6 @@ def index():
         videos = []
     return render_template('index.html', videos=videos)
 
-@app.route('/login')
-def login():
-    redirect_uri = url_for('authorize', _external=True)
-    return google.authorize_redirect(redirect_uri)
 
 
 @app.route('/authorize')
@@ -107,13 +152,7 @@ def authorize():
         flash(f'An error occurred: {str(e)}')
         return redirect(url_for('index'))
 
-@app.route('/logout')
-@login_required
-def logout():
-    user_id = current_user.id
-    logout_user()
-    logged_in_users.pop(user_id, None)  
-    return redirect(url_for('index'))
+
 
 @app.route('/update_role', methods=['POST'])
 @login_required
