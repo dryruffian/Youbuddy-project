@@ -17,13 +17,12 @@ def signup():
         user = User.query.filter_by(email=email).first()
         if user:
             flash('Email address already exists')
-            return redirect(url_for('signup'))
+            return redirect(url_for('auth.signup'))
         new_user = User(email=email, name=name, password=generate_password_hash(password, method='sha256'), role='Editor')
         db.session.add(new_user)
         db.session.commit()
-        return redirect(url_for('login'))
+        return redirect(url_for('auth.login'))
     return render_template('signup.html')
-
 
 @bp.route('/login', methods=['GET', 'POST'])
 def login():
@@ -48,6 +47,11 @@ def logout():
     logout_user()
     remove_user_session(user_id)
     return redirect(url_for('main.index'))
+
+@bp.route('/login/google')
+def google_login():
+    redirect_uri = url_for('auth.google_authorize', _external=True)
+    return oauth.google.authorize_redirect(redirect_uri)
 
 @bp.route('/authorize/google')
 def google_authorize():

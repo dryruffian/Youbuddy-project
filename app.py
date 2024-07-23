@@ -1,14 +1,16 @@
-# app.py
 from flask import Flask
 from flask_sqlalchemy import SQLAlchemy
 from flask_login import LoginManager
 from flask_jwt_extended import JWTManager
 from authlib.integrations.flask_client import OAuth
 from config import Config
+from dotenv import load_dotenv
+import os
 
 db = SQLAlchemy()
 login_manager = LoginManager()
 oauth = OAuth()
+load_dotenv()
 
 def create_app():
     app = Flask(__name__)
