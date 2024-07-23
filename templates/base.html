@@ -10,37 +10,37 @@
 <body>
     <nav class="navbar navbar-expand-lg navbar-light bg-light">
         <div class="container">
-            <a class="navbar-brand" href="{{ url_for('index') }}">Video Management</a>
+            <a class="navbar-brand" href="{{ url_for('main.index') }}">Video Management</a>
             <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav" aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
                 <span class="navbar-toggler-icon"></span>
             </button>
             <div class="collapse navbar-collapse" id="navbarNav">
                 <ul class="navbar-nav">
                     <li class="nav-item">
-                        <a class="nav-link" href="{{ url_for('index') }}">Home</a>
+                        <a class="nav-link" href="{{ url_for('main.index') }}">Home</a>
                     </li>
                     {% if current_user.is_authenticated %}
                         {% if current_user.role in ['Editor', 'Manager', 'Creator'] %}
                             <li class="nav-item">
-                                <a class="nav-link" href="{{ url_for('upload') }}">Upload</a>
+                                <a class="nav-link" href="{{ url_for('video.upload') }}">Upload</a>
                             </li>
                         {% endif %}
                         {% if current_user.role in ['Manager', 'Creator'] %}
                             <li class="nav-item">
-                                <a class="nav-link" href="{{ url_for('publish') }}">Publish</a>
+                                <a class="nav-link" href="{{ url_for('video.publish') }}">Publish</a>
                             </li>
                         {% endif %}
                         {% if current_user.role == 'Creator' %}
                             <li class="nav-item">
-                                <a class="nav-link" href="{{ url_for('admin') }}">Admin</a>
+                                <a class="nav-link" href="{{ url_for('admin.admin') }}">Admin</a>
                             </li>
                         {% endif %}
                         <li class="nav-item">
-                            <button type="button" class="btn btn-primary"><a class="nav-link --bs-light-text-emphasis" href="{{ url_for('logout') }}">Logout</a></button>
+                            <a class="nav-link btn btn-primary text-white" href="{{ url_for('auth.logout') }}">Logout</a>
                         </li>
                     {% else %}
                         <li class="nav-item">
-                            <button type="button" class="btn btn-primary"><a class="nav-link" href="{{ url_for('login') }}">Login</a></button>
+                            <a class="nav-link btn btn-primary text-white" href="{{ url_for('auth.login') }}">Login</a>
                         </li>
                     {% endif %}
                 </ul>
