@@ -21,5 +21,11 @@ class Video(db.Model):
     def rename(self, new_filename):
         old_path = os.path.join(Config.UPLOAD_FOLDER, self.filename)
         new_path = os.path.join(Config.UPLOAD_FOLDER, new_filename)
-        os.rename(old_path, new_path)
-        self.filename = new_filename
+        try:
+            os.rename(old_path, new_path)
+            self.filename = new_filename
+        except OSError as e:
+            print(f"Error renaming file: {e}")
+
+    def __repr__(self):
+        return f'<Video {self.filename}>'
