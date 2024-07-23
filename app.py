@@ -5,7 +5,6 @@ from flask_jwt_extended import JWTManager
 from authlib.integrations.flask_client import OAuth
 from config import Config
 from dotenv import load_dotenv
-import os
 
 db = SQLAlchemy()
 login_manager = LoginManager()
@@ -30,21 +29,20 @@ def create_app():
         client_kwargs={'scope': 'openid email profile'},
     )
 
-    from routes import auth, main, admin, video
-    app.register_blueprint(auth.bp)
-    app.register_blueprint(main.bp)
-    app.register_blueprint(admin.bp)
-    app.register_blueprint(video.bp)
+    with app.app_context():
+        from routes import auth, main, admin, video
+        app.register_blueprint(auth.bp)
+        app.register_blueprint(main.bp)
+        app.register_blueprint(admin.bp)
+        app.register_blueprint(video.bp)
 
-    
-    from models import User  
+        from models import User
 
-    @login_manager.user_loader
-    def load_user(user_id):
-        return User.query.get(int(user_id))
+        @login_manager.user_loader
+        def load_user(user_id):
+            return User.query.get(int(user_id))
+
+        # Create database tables
+        db.create_all()
 
     return app
-
-if __name__ == "__main__":
-    app = create_app()
-    app.run(debug=True)

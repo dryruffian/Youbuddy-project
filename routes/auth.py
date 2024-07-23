@@ -51,6 +51,8 @@ def logout():
 @bp.route('/login/google')
 def google_login():
     redirect_uri = url_for('auth.google_authorize', _external=True)
+    email = request.form.get('email')
+    
     return oauth.google.authorize_redirect(redirect_uri)
 
 @bp.route('/authorize/google')
