@@ -18,7 +18,7 @@ def signup():
         if user:
             flash('Email address already exists')
             return redirect(url_for('auth.signup'))
-        new_user = User(email=email, name=name, password=generate_password_hash(password, method='sha256'), role='Editor')
+        new_user = User(email=email, name=name, password=generate_password_hash(password, method='pbkdf2:sha256'), role='Editor')
         db.session.add(new_user)
         db.session.commit()
         return redirect(url_for('auth.login'))
@@ -34,7 +34,7 @@ def login():
             login_user(user)
             update_login_time(user.id)
             access_token = create_access_token(identity=user.id)
-            return jsonify(access_token=access_token), 200
+            return render_template('index.html'), 200
         else:
             flash('Please check your login details and try again.')
             return redirect(url_for('auth.login'))
