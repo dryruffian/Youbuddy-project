@@ -8,6 +8,23 @@ from session_manager import update_login_time, remove_user_session
 
 bp = Blueprint('auth', __name__)
 
+@bp.route('/signup', methods=['GET', 'POST'])
+def signup():
+    if request.method == 'POST':
+        email = request.form.get('email')
+        name = request.form.get('name')
+        password = request.form.get('password')
+        user = User.query.filter_by(email=email).first()
+        if user:
+            flash('Email address already exists')
+            return redirect(url_for('signup'))
+        new_user = User(email=email, name=name, password=generate_password_hash(password, method='sha256'), role='Editor')
+        db.session.add(new_user)
+        db.session.commit()
+        return redirect(url_for('login'))
+    return render_template('signup.html')
+
+
 @bp.route('/login', methods=['GET', 'POST'])
 def login():
     if request.method == 'POST':
