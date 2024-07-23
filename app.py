@@ -36,8 +36,8 @@ def create_app():
     app.register_blueprint(admin.bp)
     app.register_blueprint(video.bp)
 
-    # Add this block to set up the user_loader
-    from models import User  # Make sure to import your User model
+    
+    from models import User  
 
     @login_manager.user_loader
     def load_user(user_id):
