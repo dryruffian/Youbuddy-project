@@ -7,14 +7,14 @@ from models import Video
 from app import db
 from config import Config
 import os
-
+from flask import current_app
 bp = Blueprint('video', __name__)
 
 @bp.route('/upload', methods=['GET', 'POST'])
 @login_required
 @role_required('Creator')
 def upload():
-   if request.method == 'POST':
+    if request.method == 'POST':
         if 'video' not in request.files:
             flash('No file part', 'error')
             return redirect(request.url)
@@ -24,7 +24,7 @@ def upload():
             return redirect(request.url)
         if file and allowed_file(file.filename):
             filename = secure_filename(file.filename)
-            file_path = os.path.join(app.Config['UPLOAD_FOLDER'], filename)
+            file_path = os.path.join(current_app.config['UPLOAD_FOLDER'], filename)
             file.save(file_path)
             
             new_video = Video(filename=filename, user_id=current_user.id)
@@ -32,11 +32,13 @@ def upload():
             db.session.commit()
             
             flash('Video uploaded successfully', 'success')
-            return redirect(url_for('index'))
+            return redirect(url_for('main.index'))
         else:
             flash('Invalid file type. Allowed types are: mp4, avi, mov, wmv', 'error')
-            return render_template('upload.html')
-
+            return redirect(url_for('video.upload'))
+    
+    # GET request
+    return render_template('upload.html')
 @bp.route('/rename_video', methods=['POST'])
 @login_required
 def rename_video():
