@@ -1,4 +1,4 @@
 instance/
 .env
-__pycache__/
+/pycache/
 static/uploads/
