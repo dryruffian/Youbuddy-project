@@ -20,6 +20,11 @@
                                 <button type="button" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#renameModal{{ video.id }}">
                                     Rename
                                 </button>
+                                {% if current_user.id == video.user_id or current_user.role in ['Creator', 'Manager'] %}
+                                <button type="button" class="btn btn-danger" onclick="deleteVideo({{ video.id }})">
+                                    Delete
+                                </button>
+                                {% endif %}
                             </div>
                         </div>
                     </div>
@@ -31,6 +36,7 @@
                                 <div class="modal-header">
                                     <h5 class="modal-title" id="renameModalLabel{{ video.id }}">Rename Video</h5>
                                     <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                                    
                                 </div>
                                 <div class="modal-body">
                                     <form id="renameForm{{ video.id }}">
@@ -83,6 +89,31 @@ function renameVideo(videoId) {
     .catch((error) => {
         console.error('Error:', error);
         alert('An error occurred while renaming the video');
+    });
+}
+
+function deleteVideo(videoId) {
+    fetch('/delete_video', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+            video_id: videoId
+        }),
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            alert('Video deleted successfully');
+            location.reload();
+        } else {
+            alert('Failed to delete video: ' + data.message);
+        }
+    })
+    .catch((error) => {
+        console.error('Error:', error);
+        alert('An error occurred while deleting the video');
     });
 }
 </script>

@@ -38,6 +38,8 @@ def upload():
     
     # GET request
     return render_template('upload.html')
+
+
 @bp.route('/rename_video', methods=['POST'])
 @login_required
 def rename_video():
@@ -62,6 +64,40 @@ def rename_video():
     except Exception as e:
         db.session.rollback()
         return jsonify({'success': False, 'message': str(e)}), 500   
+
+
+@bp.route('/delete_video', methods=['POST'])
+@login_required
+def delete_video():
+    data = request.json
+    video_id = data.get('video_id')
+
+    if not video_id:
+        return jsonify({'success': False, 'message': 'Missing video_id'}), 400
+
+    video = Video.query.get(video_id)
+    if not video:
+        return jsonify({'success': False, 'message': 'Video not found'}), 404
+
+    # Check if the user has permission to delete the video
+    if video.user_id != current_user.id and current_user.role not in ['Creator', 'Manager']:
+        return jsonify({'success': False, 'message': 'Permission denied'}), 403
+
+    try:
+        # Delete the video file
+        file_path = os.path.join(current_app.config['UPLOAD_FOLDER'], video.filename)
+        if os.path.exists(file_path):
+            os.remove(file_path)
+
+        # Delete the database entry
+        db.session.delete(video)
+        db.session.commit()
+
+        return jsonify({'success': True, 'message': 'Video deleted successfully'})
+    except Exception as e:
+        db.session.rollback()
+        return jsonify({'success': False, 'message': str(e)}), 500
+
 
 @bp.route('/publish')
 @login_required
