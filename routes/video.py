@@ -5,7 +5,6 @@ import app
 from utils import role_required, allowed_file
 from models import Video
 from app import db
-from config import Config
 import os
 from flask import current_app
 bp = Blueprint('video', __name__)

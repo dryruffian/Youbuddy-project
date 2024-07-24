@@ -44,4 +44,4 @@ def update_role():
         flash(f'Role updated for {user.name}', 'success')
     else:
         flash('User not found', 'error')
-    return redirect(url_for('admin'))
+    return redirect(url_for('admin.admin'))

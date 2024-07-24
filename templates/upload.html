@@ -1,11 +1,113 @@
 {% extends "base.html" %}
 {% block content %}
+<style>
+    .upload-container {
+        width: 100%;
+        max-width: 500px;
+        margin: 50px auto;
+        padding: 20px;
+        box-shadow: 0 0 10px rgba(0,0,0,0.1);
+        border-radius: 5px;
+        text-align: center;
+    }
+    .upload-area {
+        border: 2px dashed #ccc;
+        border-radius: 5px;
+        padding: 50px 20px;
+        cursor: pointer;
+        transition: background-color 0.3s ease;
+    }
+    .upload-area:hover, .upload-area.dragover {
+        background-color: #f8f9fa;
+    }
+    .upload-area p {
+        margin: 0;
+        font-size: 18px;
+        color: #6c757d;
+    }
+    .file-input {
+        display: none;
+    }
+    .upload-btn {
+        margin-top: 20px;
+        padding: 10px 20px;
+        background-color: #007bff;
+        color: white;
+        border: none;
+        border-radius: 5px;
+        cursor: pointer;
+        transition: background-color 0.3s ease;
+    }
+    .upload-btn:hover {
+        background-color: #0056b3;
+    }
+    #file-name {
+        margin-top: 10px;
+        font-style: italic;
+    }
+</style>
+
+<div class="upload-container">
     <h1>Upload Video</h1>
-    <form method="post" enctype="multipart/form-data">
-        <div class="mb-3">
-            <label for="video" class="form-label">Select Video File</label>
-            <input type="file" class="form-control" id="video" name="video" accept="video/*" required>
+    <form method="post" enctype="multipart/form-data" id="upload-form">
+        <div class="upload-area" id="drop-area">
+            <p>Drag and drop your video here or click to select</p>
+            <input type="file" name="video" id="file-input" class="file-input" accept="video/*">
         </div>
-        <button type="submit" class="btn btn-primary">Upload</button>
+        <p id="file-name"></p>
+        <button type="submit" class="upload-btn">Upload</button>
     </form>
+</div>
+
+<script>
+    const dropArea = document.getElementById('drop-area');
+    const fileInput = document.getElementById('file-input');
+    const fileName = document.getElementById('file-name');
+
+    ['dragenter', 'dragover', 'dragleave', 'drop'].forEach(eventName => {
+        dropArea.addEventListener(eventName, preventDefaults, false);
+    });
+
+    function preventDefaults(e) {
+        e.preventDefault();
+        e.stopPropagation();
+    }
+
+    ['dragenter', 'dragover'].forEach(eventName => {
+        dropArea.addEventListener(eventName, highlight, false);
+    });
+
+    ['dragleave', 'drop'].forEach(eventName => {
+        dropArea.addEventListener(eventName, unhighlight, false);
+    });
+
+    function highlight(e) {
+        dropArea.classList.add('dragover');
+    }
+
+    function unhighlight(e) {
+        dropArea.classList.remove('dragover');
+    }
+
+    dropArea.addEventListener('drop', handleDrop, false);
+
+    function handleDrop(e) {
+        const dt = e.dataTransfer;
+        const files = dt.files;
+        fileInput.files = files;
+        updateFileName();
+    }
+
+    dropArea.addEventListener('click', () => fileInput.click());
+
+    fileInput.addEventListener('change', updateFileName);
+
+    function updateFileName() {
+        if (fileInput.files.length > 0) {
+            fileName.textContent = `Selected file: ${fileInput.files[0].name}`;
+        } else {
+            fileName.textContent = '';
+        }
+    }
+</script>
 {% endblock %}

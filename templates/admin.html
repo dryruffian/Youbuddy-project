@@ -24,7 +24,7 @@
             <td>{{ user.email }}</td>
             <td>{{ user.role }}</td>
             <td>
-                <form action="{{ url_for('update_role') }}" method="POST" class="d-inline">
+                <form action="{{ url_for('admin.update_role') }}" method="POST" class="d-inline">
                     <input type="hidden" name="user_id" value="{{ user.id }}">
                     <select name="new_role" class="form-select form-select-sm d-inline-block w-auto">
                         <option value="Editor" {% if user.role == 'Editor' %}selected{% endif %}>Editor</option>
@@ -39,7 +39,4 @@
     </tbody>
 </table>
 
-<form action="{{ url_for('cleanup_sessions') }}" method="POST" class="mt-4">
-    <button type="submit" class="btn btn-warning">Cleanup Inactive Sessions</button>
-</form>
 {% endblock %}
