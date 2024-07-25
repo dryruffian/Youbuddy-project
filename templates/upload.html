@@ -1,52 +1,6 @@
 {% extends "base.html" %}
+{% block stylesheet %}<link rel="stylesheet" herf="{{ url_for('static', filename='upload.css') }}">{% endblock stylesheet %}
 {% block content %}
-<style>
-    .upload-container {
-        width: 100%;
-        max-width: 500px;
-        margin: 50px auto;
-        padding: 20px;
-        box-shadow: 0 0 10px rgba(0,0,0,0.1);
-        border-radius: 5px;
-        text-align: center;
-    }
-    .upload-area {
-        border: 2px dashed #ccc;
-        border-radius: 5px;
-        padding: 50px 20px;
-        cursor: pointer;
-        transition: background-color 0.3s ease;
-    }
-    .upload-area:hover, .upload-area.dragover {
-        background-color: #f8f9fa;
-    }
-    .upload-area p {
-        margin: 0;
-        font-size: 18px;
-        color: #6c757d;
-    }
-    .file-input {
-        display: none;
-    }
-    .upload-btn {
-        margin-top: 20px;
-        padding: 10px 20px;
-        background-color: #007bff;
-        color: white;
-        border: none;
-        border-radius: 5px;
-        cursor: pointer;
-        transition: background-color 0.3s ease;
-    }
-    .upload-btn:hover {
-        background-color: #0056b3;
-    }
-    #file-name {
-        margin-top: 10px;
-        font-style: italic;
-    }
-</style>
-
 <div class="upload-container">
     <h1>Upload Video</h1>
     <form method="post" enctype="multipart/form-data" id="upload-form">

@@ -1,5 +1,56 @@
 {% extends "base.html" %}
+
 {% block content %}
-    <h1>Publish Video</h1>
-    <!-- Add publish functionality here -->
+<div class="container mt-5">
+    <div class="row">
+        <div class="col-lg-8 offset-lg-2">
+            <h1 class="mb-4">Publish Video</h1>
+            <div class="card shadow">
+                <div class="card-body">
+                    <video class="w-100 mb-4" controls>
+                        <source src="{{ url_for('static', filename='uploads/' + video.filename) }}" type="video/mp4">
+                        Your browser does not support the video tag.
+                    </video>
+                    <h2 class="card-title">{{ video.filename }}</h2>
+                    <p class="card-text">Uploaded by: {{ video.user.name }}</p>
+                    <p class="card-text"><small class="text-muted">Uploaded on: {{ video.upload_date.strftime('%Y-%m-%d %H:%M:%S') }}</small></p>
+                    
+                    <form id="publishForm">
+                        <div class="mb-3">
+                            <label for="title" class="form-label">Title</label>
+                            <input type="text" class="form-control" id="title" name="title" required>
+                        </div>
+                        <div class="mb-3">
+                            <label for="description" class="form-label">Description</label>
+                            <textarea class="form-control" id="description" name="description" rows="3" required></textarea>
+                        </div>
+                        <div class="mb-3">
+                            <label for="tags" class="form-label">Tags (comma-separated)</label>
+                            <input type="text" class="form-control" id="tags" name="tags">
+                        </div>
+                        <div class="mb-3">
+                            <label for="category" class="form-label">Category</label>
+                            <select class="form-select" id="category" name="category" required>
+                                <option value="">Select a category</option>
+                                <option value="education">Education</option>
+                                <option value="entertainment">Entertainment</option>
+                                <option value="music">Music</option>
+                                <option value="sports">Sports</option>
+                                <option value="technology">Technology</option>
+                            </select>
+                        </div>
+                        <div class="mb-3 form-check">
+                            <input type="checkbox" class="form-check-input" id="isPublic" name="isPublic">
+                            <label class="form-check-label" for="isPublic">Make video public</label>
+                        </div>
+                        <button type="submit" class="btn btn-primary">Publish Video</button>
+                        <a href="{{ url_for('main.index') }}" class="btn btn-secondary">Cancel</a>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
 {% endblock %}
+
+{% block scripts %}<script src="{{ url_for('static', filename='publish.js') }}"></script>{% endblock scripts %}

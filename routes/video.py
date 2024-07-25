@@ -99,8 +99,29 @@ def delete_video():
         return jsonify({'success': False, 'message': str(e)}), 500
 
 
-@bp.route('/publish')
+@bp.route('/publish/<int:video_id>')
 @login_required
 @role_required('Manager')
-def publish():
-    return render_template('publish.html')
+def publish(video_id):
+    video = Video.query.get_or_404(video_id)
+    return render_template('publish.html', video=video)
+
+@bp.route('/publish_video', methods=['POST'])
+@login_required
+@role_required('Manager')
+def publish_video():
+    video_id = request.form.get('video_id')
+    video = Video.query.get_or_404(video_id)
+
+    video.title = request.form.get('title')
+    video.description = request.form.get('description')
+    video.tags = request.form.get('tags')
+    video.category = request.form.get('category')
+    video.is_public = 'isPublic' in request.form
+
+    try:
+        db.session.commit()
+        return jsonify({'success': True, 'message': 'Video published successfully'})
+    except Exception as e:
+        db.session.rollback()
+        return jsonify({'success': False, 'message': str(e)}), 500
